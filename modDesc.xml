@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="71">
+    <author>Sly</author>
+    <version>0.0.0.5</version>
+    <title>
+		<de>Displays für Gebäude</de>
+		<en>displays for placeables</en>
+    </title>
+    <description>
+        <en>
+            <![CDATA[A small mod 
+]]>
+</en>
+    </description>
+    <iconFilename>modIcon.dds</iconFilename>
+    <multiplayer supported="true" />
+
+	<extraSourceFiles>
+		<sourceFile filename="scripts/register.lua" />
+    </extraSourceFiles>
+	
+	<placeableSpecializations>
+        <specialization name="siloDisplays" className="SiloDisplays" filename="scripts/SiloDisplays.lua"/>    
+		<specialization name="productionPointDisplays" className="ProductionPointDisplays" filename="scripts/ProductionPointDisplays.lua"/>    	
+		<specialization name="manureHeapDisplays" className="ManureHeapDisplays" filename="scripts/ManureHeapDisplays.lua"/> 
+		<specialization name="bunkerSiloDisplays" className="BunkerSiloDisplays" filename="scripts/BunkerSiloDisplays.lua"/>
+		<specialization name="husbandryDisplays" className="HusbandryDisplays" filename="scripts/HusbandryDisplays.lua"/>	
+    </placeableSpecializations>	
+</modDesc>
