@@ -439,17 +439,15 @@ function ProductionPointDisplays:renderDisplayTexts()
 					local rotX, rotY, rotZ = 0, 0, 0
 					local rendTxt = ""
 					local rendTxtSize = displayLine.textSize
-					if displayLine.headLineNode ~= nil then --and displayLine.headLineText ~= nil then					
+					if displayLine.headLineNode ~= nil then
 						transX, transY, transZ = getWorldTranslation(displayLine.headLineNode)
-						rotX, rotY, rotZ = getWorldRotation(displayLine.headLineNode)					
-						displayLine.titleAlignment = RenderText.ALIGN_CENTER
+						rotX, rotY, rotZ = getWorldRotation(displayLine.headLineNode)						
 						rendTxt = displayLine.headLineText						
 						if displayLine.headLineType ~= nil then
 							local validFarm = g_farmManager:getFarmById(displayLine.farmId)
 							if displayLine.headLineType == "farmName" and validFarm ~= nil then
 								rendTxt = validFarm.name
 							elseif displayLine.headLineType == "placeableName" then
-								--rendTxt = self.spec_productionPoint.productionPoint.loadingStation:getName()
 								rendTxt = self.spec_productionPoint.productionPoint:getName()
 							end
 						end

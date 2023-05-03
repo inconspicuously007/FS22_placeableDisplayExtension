@@ -422,8 +422,7 @@ function SiloDisplays:renderDisplayTexts()
 					local rendTxtSize = displayLine.textSize
 					if displayLine.headLineNode ~= nil then					
 						transX, transY, transZ = getWorldTranslation(displayLine.headLineNode)
-						rotX, rotY, rotZ = getWorldRotation(displayLine.headLineNode)					
-						displayLine.titleAlignment = RenderText.ALIGN_CENTER
+						rotX, rotY, rotZ = getWorldRotation(displayLine.headLineNode)											
 						rendTxt = displayLine.headLineText						
 						if displayLine.headLineType ~= nil then
 							if displayLine.headLineType == "farmName" and validFarm ~= nil then
