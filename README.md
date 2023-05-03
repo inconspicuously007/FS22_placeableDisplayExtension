@@ -1,5 +1,5 @@
 # FS22_placeableDisplayExtension
 
-aktuelle Version: **0.0.0.5**
+aktuelle Version: **0.0.0.6**
 
 direkter Download: [FS22_placeableDisplayExtension](https://github.com/inconspicuously007/FS22_placeableDisplayExtension/releases/latest/download/FS22_placeableDisplayExtension.zip)
