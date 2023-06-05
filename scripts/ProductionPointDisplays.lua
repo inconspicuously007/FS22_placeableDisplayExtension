@@ -439,9 +439,9 @@ function ProductionPointDisplays:renderDisplayTexts()
 					local rotX, rotY, rotZ = 0, 0, 0
 					local rendTxt = ""
 					local rendTxtSize = displayLine.textSize
-					if displayLine.headLineNode ~= nil then
+					if displayLine.headLineNode ~= nil then				
 						transX, transY, transZ = getWorldTranslation(displayLine.headLineNode)
-						rotX, rotY, rotZ = getWorldRotation(displayLine.headLineNode)						
+						rotX, rotY, rotZ = getWorldRotation(displayLine.headLineNode)
 						rendTxt = displayLine.headLineText						
 						if displayLine.headLineType ~= nil then
 							local validFarm = g_farmManager:getFarmById(displayLine.farmId)
@@ -483,66 +483,27 @@ function ProductionPointDisplays:renderDisplayTexts()
 end
 
 function ProductionPointDisplays:updateDisplayLines(initial)
-	--if self.isClient then	
 	if g_dedicatedServer == nil then
 		for _, displayLine in pairs(self.spec_productionPointDisplays.productionPointDisplayLines) do
-			if displayLine.rootNodeActive == true then			
-				if displayLine.fillLevelCharacterLine ~= nil or (displayLine.prodFillWarnNode ~= nil and displayLine.prodFillWarnType ~= nil) or displayLine.hasFillLevelNodeVis == true then
-					local fillLevel = self.spec_productionPoint.productionPoint.loadingStation:getFillLevel(displayLine.fillType.index, displayLine.farmId) or 0
-					local freeCapacity = self.spec_productionPoint.productionPoint.storage:getFreeCapacity(displayLine.fillType.index) or 0					
-					local intFill, floatPartFill = math.modf(fillLevel)				
-					local fillLevelValue = string.format("%" .. displayLine.mask:len() .. "s", g_i18n:formatNumber(intFill))
-					local fillLevelVisValue = 0
-					if intFill > 0 then
-						fillLevelVisValue = (100 * intFill) / (fillLevel + freeCapacity)
-					end
-					if displayLine.fillLevelCharacterLine ~= nil then
-						displayLine.fontMaterial:updateCharacterLine(displayLine.fillLevelCharacterLine, fillLevelValue)				
-					end
-					
-					if displayLine.hasFillLevelNodeVis ~= nil and displayLine.hasFillLevelNodeVis == true then 
-						if displayLine.fillLevelNodeVis0 ~= nil then setVisibility(displayLine.fillLevelNodeVis0, false) end
-						if displayLine.fillLevelNodeVis25 ~= nil then setVisibility(displayLine.fillLevelNodeVis25, false) end
-						if displayLine.fillLevelNodeVis50 ~= nil then setVisibility(displayLine.fillLevelNodeVis50, false) end
-						if displayLine.fillLevelNodeVis75 ~= nil then setVisibility(displayLine.fillLevelNodeVis75, false) end
-						if displayLine.fillLevelNodeVis99 ~= nil then setVisibility(displayLine.fillLevelNodeVis99, false) end
-						if displayLine.fillLevelNodeVis100 ~= nil then setVisibility(displayLine.fillLevelNodeVis100, false) end
-						
-						if displayLine.fillLevelNodeVis0 ~= nil and fillLevelVisValue <= 1 then setVisibility(displayLine.fillLevelNodeVis0, true)
-						elseif displayLine.fillLevelNodeVis100 ~= nil and fillLevelVisValue >= 99 then setVisibility(displayLine.fillLevelNodeVis100, true)
-						elseif displayLine.fillLevelNodeVis25 ~= nil and fillLevelVisValue > 1 and fillLevelVisValue < 25  then setVisibility(displayLine.fillLevelNodeVis25, true)
-						elseif displayLine.fillLevelNodeVis50 ~= nil and fillLevelVisValue >= 25 and fillLevelVisValue < 50  then setVisibility(displayLine.fillLevelNodeVis50, true)
-						elseif displayLine.fillLevelNodeVis75 ~= nil and fillLevelVisValue >= 50 and fillLevelVisValue < 75  then setVisibility(displayLine.fillLevelNodeVis75, true)
-						elseif displayLine.fillLevelNodeVis99 ~= nil and fillLevelVisValue >= 75 and fillLevelVisValue < 99  then setVisibility(displayLine.fillLevelNodeVis99, true)
-						end
-						
-						--if displayLine.fillLevelNodeVis25 ~= nil and fillLevelVisValue < 25 then setVisibility(displayLine.fillLevelNodeVis25, true) 
-						--elseif displayLine.fillLevelNodeVis50 ~= nil and fillLevelVisValue >= 25 and fillLevelVisValue < 50 then setVisibility(displayLine.fillLevelNodeVis50, true)
-						--elseif displayLine.fillLevelNodeVis75 ~= nil and fillLevelVisValue >= 50 and fillLevelVisValue < 75 then setVisibility(displayLine.fillLevelNodeVis75, true)
-						--elseif displayLine.fillLevelNodeVis100 ~= nil and fillLevelVisValue >= 75 and fillLevelVisValue <= 100 then setVisibility(displayLine.fillLevelNodeVis100, true)
-						--end
-					end
-					
-					if displayLine.prodFillWarnNode ~= nil and displayLine.prodFillWarnType ~= nil then						
-						local statWarn = false
-						if intFill <= 1 and (displayLine.prodFillWarnType == 0 or displayLine.prodFillWarnType == 3) then
-							statWarn = true	
-							--if displayLine.fillLevelNodeVis25 ~= nil then setVisibility(displayLine.fillLevelNodeVis25, false) end	
-						end
-						if freeCapacity <= 1 and (displayLine.prodFillWarnType == 1 or displayLine.prodFillWarnType == 3) then
-							statWarn = true
-							--if displayLine.fillLevelNodeVis100 ~= nil then setVisibility(displayLine.fillLevelNodeVis100, false) end	
-						end
-						--if displayLine.prodFillWarnType == 3 and freeCapacity > 1 and intFill > 1 then
-						--	statWarn = true
-						--	--if displayLine.fillLevelNodeVis100 ~= nil then setVisibility(displayLine.fillLevelNodeVis100, false) end	
-						--end
-						setVisibility(displayLine.prodFillWarnNode, statWarn)
-					end
-					
+			if displayLine.rootNodeActive == true then
+				local fillLevel = 0
+				local intFill = 0 
+				local floatPartFill = 0
+				local fillLevelValue = 0 
+				local freeCapacity = 0 
+				local capacity = 0
+
+				if displayLine.fillType ~= nil and displayLine.fillType.index ~= nil then
+					fillLevel = self.spec_productionPoint.productionPoint.loadingStation:getFillLevel(displayLine.fillType.index, displayLine.farmId) or 0								
+					intFill, floatPartFill = math.modf(fillLevel)
 				end
-				if displayLine.capacityCharacterLine ~= nil then
-					local capacity = 0
+				
+				if displayLine.fillLevelCharacterLine ~= nil then									
+					fillLevelValue = string.format("%" .. displayLine.mask:len() .. "s", g_i18n:formatNumber(intFill))
+					displayLine.fontMaterial:updateCharacterLine(displayLine.fillLevelCharacterLine, fillLevelValue)						
+				end	
+				
+				if displayLine.prodFillWarnNode ~= nil or displayLine.capacityCharacterLine ~= nil or displayLine.hasFillLevelNodeVis == true then
 					for _, sourceStorage in pairs(self.spec_productionPoint.productionPoint.loadingStation:getSourceStorages()) do
 						if self.spec_productionPoint.productionPoint.loadingStation:hasFarmAccessToStorage(displayLine.farmId, sourceStorage) then
 							local storageCapacity = 0					
@@ -554,6 +515,45 @@ function ProductionPointDisplays:updateDisplayLines(initial)
 							capacity = capacity + storageCapacity
 						end
 					end
+				end
+				
+				if (displayLine.prodFillWarnNode ~= nil and displayLine.prodFillWarnType ~= nil) or displayLine.hasFillLevelNodeVis == true then						
+					freeCapacity = capacity - intFill						
+					if displayLine.hasFillLevelNodeVis ~= nil and displayLine.hasFillLevelNodeVis == true then
+						local fillLevelVisValue = 0
+						if intFill > 0 then
+							fillLevelVisValue = (100 * intFill) / (fillLevel + freeCapacity)							
+						end					
+						
+						if displayLine.fillLevelNodeVis0 ~= nil then setVisibility(displayLine.fillLevelNodeVis0, false) end
+						if displayLine.fillLevelNodeVis25 ~= nil then setVisibility(displayLine.fillLevelNodeVis25, false) end
+						if displayLine.fillLevelNodeVis50 ~= nil then setVisibility(displayLine.fillLevelNodeVis50, false) end
+						if displayLine.fillLevelNodeVis75 ~= nil then setVisibility(displayLine.fillLevelNodeVis75, false) end							
+						if displayLine.fillLevelNodeVis99 ~= nil then setVisibility(displayLine.fillLevelNodeVis99, false) end							
+						if displayLine.fillLevelNodeVis100 ~= nil then setVisibility(displayLine.fillLevelNodeVis100, false) end
+						
+						if displayLine.fillLevelNodeVis0 ~= nil and fillLevelVisValue <= 1 then setVisibility(displayLine.fillLevelNodeVis0, true)
+						elseif displayLine.fillLevelNodeVis100 ~= nil and fillLevelVisValue >= 99 then setVisibility(displayLine.fillLevelNodeVis100, true)
+						elseif displayLine.fillLevelNodeVis25 ~= nil and fillLevelVisValue > 1 and fillLevelVisValue < 25  then setVisibility(displayLine.fillLevelNodeVis25, true)
+						elseif displayLine.fillLevelNodeVis50 ~= nil and fillLevelVisValue >= 25 and fillLevelVisValue < 50  then setVisibility(displayLine.fillLevelNodeVis50, true)
+						elseif displayLine.fillLevelNodeVis75 ~= nil and fillLevelVisValue >= 50 and fillLevelVisValue < 75  then setVisibility(displayLine.fillLevelNodeVis75, true)
+						elseif displayLine.fillLevelNodeVis99 ~= nil and fillLevelVisValue >= 75 and fillLevelVisValue < 99  then setVisibility(displayLine.fillLevelNodeVis99, true)
+						end							
+					end
+					
+					if displayLine.prodFillWarnNode ~= nil and displayLine.prodFillWarnType ~= nil then						
+						local statWarn = false
+						if intFill < 10 and (displayLine.prodFillWarnType == 0 or displayLine.prodFillWarnType == 3) then
+							statWarn = true									
+						end
+						if freeCapacity < 10 and (displayLine.prodFillWarnType == 1 or displayLine.prodFillWarnType == 3) then
+							statWarn = true															
+						end							
+						setVisibility(displayLine.prodFillWarnNode, statWarn)
+					end						
+				end
+				
+				if displayLine.capacityCharacterLine ~= nil then					
 					local intCap, floatPartCap = math.modf(capacity)				
 					local capacityValue = string.format("%" .. displayLine.mask:len() .. "s", g_i18n:formatNumber(intCap))
 					displayLine.fontMaterial:updateCharacterLine(displayLine.capacityCharacterLine, capacityValue)
