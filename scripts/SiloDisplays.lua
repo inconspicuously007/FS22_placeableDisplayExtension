@@ -53,7 +53,9 @@ function SiloDisplays.registerXMLPaths(schema, basePath)
 	schema:register(XMLValueType.STRING, basePath .. ".silo.siloDisplays.display(?).displayLine(?)#headLineText", "Display text in headline")
 	schema:register(XMLValueType.STRING, basePath .. ".silo.siloDisplays.display(?).displayLine(?)#headLineType", "Display type for headline")
 	schema:register(XMLValueType.FLOAT, basePath .. ".silo.siloDisplays.display(?).displayLine(?)#lineTitleTextSize", "Display title text size", 0.05)
-	schema:register(XMLValueType.FLOAT, basePath .. ".silo.siloDisplays.display(?).displayLine(?)#lineFillLevelTextSize", "Display fill level text size", 0.05)	
+	schema:register(XMLValueType.INT, basePath .. ".silo.siloDisplays.display(?).displayLine(?)#lineTitleMaxLen", "Display title text max length", 15)
+	schema:register(XMLValueType.FLOAT, basePath .. ".silo.siloDisplays.display(?).displayLine(?)#lineFillLevelTextSize", "Display fill level text size", 0.05)
+	
 	schema:register(XMLValueType.NODE_INDEX, basePath .. ".silo.siloDisplays.display(?).displayLine(?)#fillWarningNode", "Display node for filllevel of storage for filltype")
 	schema:register(XMLValueType.STRING, basePath .. ".silo.siloDisplays.display(?).displayLine(?)#fillWarningType", "cases to show the fillWarningNode: empty, full or both")	
 	
@@ -126,6 +128,7 @@ function SiloDisplays:onLoad(savegame)
 					
 					local lineTextSize = xmlFile:getValue(displayLineKey .. "#lineSize") or xmlFile:getValue(displayKey .. "#size", 0.03)
 					local lineTitleTextSize = xmlFile:getValue(displayLineKey .. "#lineTitleTextSize") or lineTextSize
+					local lineTitleMaxLen = xmlFile:getValue(displayLineKey .. "#lineTitleMaxLen", 15)
 					local lineFillLevelTextSize = xmlFile:getValue(displayLineKey .. "#lineFillLevelTextSize") or lineTextSize
                     local lineTextScaleX = xmlFile:getValue(displayLineKey .. "#lineScaleX") or xmlFile:getValue(displayKey .. "#scaleX", 1)
                     local lineTextScaleY = xmlFile:getValue(displayLineKey .. "#lineScaleY") or xmlFile:getValue(displayKey .. "#scaleY", 1)
@@ -289,6 +292,7 @@ function SiloDisplays:onLoad(savegame)
 						titleAlignment = RenderText["ALIGN_" .. xmlFile:getValue(displayLineKey .. "#lineTitleAlignment", ""):upper()] or RenderText["ALIGN_" .. xmlFile:getValue(displayKey .. "#titleAlignment", ""):upper()] or RenderText.ALIGN_LEFT,
 						textSize = lineTextSize,
 						titleTextSize = lineTitleTextSize,
+						titleMaxLength = lineTitleMaxLen,
 						fillLevelTextSize = lineFillLevelTextSize,
 						fillType = lineFillType,
 						farmId = displayOwnerFarm,
@@ -441,10 +445,13 @@ function SiloDisplays:renderDisplayTexts()
 					if displayLine.titleNode ~= nil and displayLine.fillType ~= nil then
 						transX, transY, transZ = getWorldTranslation(displayLine.titleNode)
 						rotX, rotY, rotZ = getWorldRotation(displayLine.titleNode)					
-						rendTxt = displayLine.fillType.title
+						rendTxt = displayLine.fillType.title						
 						rendTxtSize = displayLine.titleTextSize
+						if displayLine.titleMaxLength~= nil and displayLine.titleMaxLength > 1 and utf8Strlen(rendTxt) > displayLine.titleMaxLength then
+							rendTxt = utf8Substr(rendTxt, 0, math.max(utf8Strlen(rendTxt) - 3, displayLine.titleMaxLength - 3)) .. "..."
+						end
 					end
-					if rendTxt ~= nil then
+					if rendTxt ~= nil then						
 						setTextVerticalAlignment(RenderText.VERTICAL_ALIGN_BASELINE)
 						setTextColor(displayLine.color[1], displayLine.color[2], displayLine.color[3], displayLine.color[4])
 						setTextAlignment(displayLine.titleAlignment)			
