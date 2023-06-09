@@ -448,7 +448,7 @@ function SiloDisplays:renderDisplayTexts()
 						rendTxt = displayLine.fillType.title						
 						rendTxtSize = displayLine.titleTextSize
 						if displayLine.titleMaxLength~= nil and displayLine.titleMaxLength > 1 and utf8Strlen(rendTxt) > displayLine.titleMaxLength then
-							rendTxt = utf8Substr(rendTxt, 0, math.max(utf8Strlen(rendTxt) - 3, displayLine.titleMaxLength - 3)) .. "..."
+							rendTxt = utf8Substr(rendTxt, 0, displayLine.titleMaxLength - 3) .. "..."
 						end
 					end
 					if rendTxt ~= nil then						
