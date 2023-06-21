@@ -12,9 +12,15 @@ function ManureHeapDisplays.registerEventListeners(placeableType)
 end
 
 function ManureHeapDisplays.registerFunctions(placeableType)
-  SpecializationUtil.registerFunction(placeableType, "updateDisplayLines", ManureHeapDisplays.updateDisplayLines)
-  SpecializationUtil.registerFunction(placeableType, "renderDisplayTexts", ManureHeapDisplays.renderDisplayTexts)
-  SpecializationUtil.registerFunction(placeableType, "checkRenderDistance", ManureHeapDisplays.checkRenderDistance)
+	if placeableType.functions["updateDisplayLines"] == nil then
+		SpecializationUtil.registerFunction(placeableType, "updateDisplayLines", ManureHeapDisplays.updateDisplayLines)
+	end
+	if placeableType.functions["renderDisplayTexts"] == nil then
+		SpecializationUtil.registerFunction(placeableType, "renderDisplayTexts", ManureHeapDisplays.renderDisplayTexts)
+	end
+	if placeableType.functions["checkRenderDistance"] == nil then
+		SpecializationUtil.registerFunction(placeableType, "checkRenderDistance", ManureHeapDisplays.checkRenderDistance)
+	end
 end
 
 function ManureHeapDisplays.registerXMLPaths(schema, basePath)

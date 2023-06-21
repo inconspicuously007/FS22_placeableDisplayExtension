@@ -12,9 +12,15 @@ function ProductionPointDisplays.registerEventListeners(placeableType)
 end
 
 function ProductionPointDisplays.registerFunctions(placeableType)
-  SpecializationUtil.registerFunction(placeableType, "updateDisplayLines", ProductionPointDisplays.updateDisplayLines)
-  SpecializationUtil.registerFunction(placeableType, "renderDisplayTexts", ProductionPointDisplays.renderDisplayTexts)
-  SpecializationUtil.registerFunction(placeableType, "checkRenderDistance", ProductionPointDisplays.checkRenderDistance)
+	if placeableType.functions["updateDisplayLines"] == nil then
+		SpecializationUtil.registerFunction(placeableType, "updateDisplayLines", ProductionPointDisplays.updateDisplayLines)
+	end
+	if placeableType.functions["renderDisplayTexts"] == nil then
+		SpecializationUtil.registerFunction(placeableType, "renderDisplayTexts", ProductionPointDisplays.renderDisplayTexts)
+	end
+	if placeableType.functions["checkRenderDistance"] == nil then
+		SpecializationUtil.registerFunction(placeableType, "checkRenderDistance", ProductionPointDisplays.checkRenderDistance)
+	end
 end
 
 function ProductionPointDisplays.registerXMLPaths(schema, basePath)
@@ -255,8 +261,16 @@ function ProductionPointDisplays:onLoad(savegame)
 					
 					local lineFillTypeName = xmlFile:getString(displayLineKey .. "#fillType", nil)					
 					local lineFillType = nil
+					local lineFillTypeTitle = nil
 					if lineFillTypeName ~= nil then
 						lineFillType = g_fillTypeManager:getFillTypeByName(lineFillTypeName)
+						if lineFillType == nil then Logging.error("Could not find fillType for given name '%s'!", lineFillTypeName) end
+						if lineFillType ~= nil then
+							lineFillTypeTitle = lineFillType.title
+							if lineTitleMaxLen~= nil and lineTitleMaxLen > 1 and utf8Strlen(lineFillTypeTitle) > lineTitleMaxLen then
+								lineFillTypeTitle = utf8Substr(lineFillTypeTitle, 0, lineTitleMaxLen - 3) .. "..."
+							end
+						end
 					end
 					
 					if lineProdFillWarnNode ~= nil then
@@ -297,6 +311,7 @@ function ProductionPointDisplays:onLoad(savegame)
 						titleMaxLength = lineTitleMaxLen,
 						fillLevelTextSize = lineFillLevelTextSize,
 						fillType = lineFillType,
+						fillTypeTitle = lineFillTypeTitle,
 						farmId = displayOwnerFarm,
 						scaleX = lineTextScaleX,
 						scaleY = lineTextScaleY,
@@ -357,7 +372,7 @@ function ProductionPointDisplays:onFinalizePlacement(savegame)
 	local spec = self.spec_productionPointDisplays
 	if spec.productionPointHasDisplays then			
 		function spec.fillLevelChangedCallback(fillType, delta)
-			self:updateDisplayLines(false)
+			self:updateDisplayLines(false, fillType)
 		end		
 		for _, sourceStorage in pairs(self.spec_productionPoint.productionPoint.loadingStation:getSourceStorages()) do				
 			sourceStorage:addFillLevelChangedListeners(spec.fillLevelChangedCallback)
@@ -370,7 +385,7 @@ function ProductionPointDisplays:onPostFinalizePlacement(savegame)
 	if spec.productionPointHasDisplays then		
 		table.insert(ProductionPointDisplays.displays, self)		
 	end
-	self:updateDisplayLines(true)	
+	self:updateDisplayLines(true, nil)
 end
 
 function ProductionPointDisplays:onDelete()
@@ -481,17 +496,20 @@ function ProductionPointDisplays:renderDisplayTexts()
 							if displayLine.prodOnNode ~= nil then setVisibility(displayLine.prodOnNode, statActive) end
 						end
 					end
-					if initValues == true then self:updateDisplayLines() end
+					if initValues == true then self:updateDisplayLines(true, nil) end
 				end
 			end
 		end		
 	end
 end
 
-function ProductionPointDisplays:updateDisplayLines(initial)
+function ProductionPointDisplays:updateDisplayLines(initial, fillTypeIndex)
 	if g_dedicatedServer == nil then
 		for _, displayLine in pairs(self.spec_productionPointDisplays.productionPointDisplayLines) do
-			if displayLine.rootNodeActive == true then
+			local check = false
+			if initial ~= nil and initial == false and fillTypeIndex ~= nil and displayLine.fillType ~= nil and displayLine.fillType.index ~= nil and fillTypeIndex == displayLine.fillType.index then check = true end
+			if initial ~= nil and initial == true then check = true end
+			if displayLine.rootNodeActive == true and check == true then
 				local fillLevel = 0
 				local intFill = 0 
 				local floatPartFill = 0

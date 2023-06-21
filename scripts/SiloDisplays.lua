@@ -12,9 +12,15 @@ function SiloDisplays.registerEventListeners(placeableType)
 end
 
 function SiloDisplays.registerFunctions(placeableType)
-  SpecializationUtil.registerFunction(placeableType, "updateDisplayLines", SiloDisplays.updateDisplayLines)
-  SpecializationUtil.registerFunction(placeableType, "renderDisplayTexts", SiloDisplays.renderDisplayTexts)
-  SpecializationUtil.registerFunction(placeableType, "checkRenderDistance", SiloDisplays.checkRenderDistance)
+	if placeableType.functions["updateDisplayLines"] == nil then
+		SpecializationUtil.registerFunction(placeableType, "updateDisplayLines", SiloDisplays.updateDisplayLines)
+	end
+	if placeableType.functions["renderDisplayTexts"] == nil then
+		SpecializationUtil.registerFunction(placeableType, "renderDisplayTexts", SiloDisplays.renderDisplayTexts)
+	end
+	if placeableType.functions["checkRenderDistance"] == nil then
+		SpecializationUtil.registerFunction(placeableType, "checkRenderDistance", SiloDisplays.checkRenderDistance)
+	end
 end
 
 function SiloDisplays.registerXMLPaths(schema, basePath)
@@ -251,9 +257,16 @@ function SiloDisplays:onLoad(savegame)
 					
 					local lineFillTypeName = xmlFile:getString(displayLineKey .. "#fillType", nil)					
 					local lineFillType = nil
+					local lineFillTypeTitle = nil
 					if lineFillTypeName ~= nil then
 						lineFillType = g_fillTypeManager:getFillTypeByName(lineFillTypeName)
 						if lineFillType == nil then Logging.error("Could not find fillType for given name '%s'!", lineFillTypeName) end
+						if lineFillType ~= nil then
+							lineFillTypeTitle = lineFillType.title
+							if lineTitleMaxLen~= nil and lineTitleMaxLen > 1 and utf8Strlen(lineFillTypeTitle) > lineTitleMaxLen then
+								lineFillTypeTitle = utf8Substr(lineFillTypeTitle, 0, lineTitleMaxLen - 3) .. "..."
+							end
+						end
 					end
 					
 					if lineSiloFillWarnNode ~= nil then
@@ -295,6 +308,7 @@ function SiloDisplays:onLoad(savegame)
 						titleMaxLength = lineTitleMaxLen,
 						fillLevelTextSize = lineFillLevelTextSize,
 						fillType = lineFillType,
+						fillTypeTitle = lineFillTypeTitle,
 						farmId = displayOwnerFarm,
 						scaleX = lineTextScaleX,
 						scaleY = lineTextScaleY,
@@ -351,7 +365,7 @@ function SiloDisplays:onFinalizePlacement(savegame)
 	local spec = self.spec_siloDisplays
 	if spec.siloHasDisplays then			
 		function spec.fillLevelChangedCallback(fillType, delta)
-			self:updateDisplayLines(false)
+			self:updateDisplayLines(false, fillType)
 		end
 		for _, sourceStorage in pairs(self.spec_silo.loadingStation:getSourceStorages()) do				
 			sourceStorage:addFillLevelChangedListeners(spec.fillLevelChangedCallback)
@@ -363,7 +377,7 @@ function SiloDisplays:onPostFinalizePlacement(savegame)
 	local spec = self.spec_siloDisplays
 	if spec.siloHasDisplays then		
 		table.insert(SiloDisplays.displays, self)		
-		self:updateDisplayLines(true)
+		self:updateDisplayLines(true, nil)
 	end		
 end
 
@@ -445,11 +459,12 @@ function SiloDisplays:renderDisplayTexts()
 					if displayLine.titleNode ~= nil and displayLine.fillType ~= nil then
 						transX, transY, transZ = getWorldTranslation(displayLine.titleNode)
 						rotX, rotY, rotZ = getWorldRotation(displayLine.titleNode)					
-						rendTxt = displayLine.fillType.title						
+						--rendTxt = displayLine.fillType.title
 						rendTxtSize = displayLine.titleTextSize
-						if displayLine.titleMaxLength~= nil and displayLine.titleMaxLength > 1 and utf8Strlen(rendTxt) > displayLine.titleMaxLength then
-							rendTxt = utf8Substr(rendTxt, 0, displayLine.titleMaxLength - 3) .. "..."
-						end
+						--if displayLine.titleMaxLength~= nil and displayLine.titleMaxLength > 1 and utf8Strlen(rendTxt) > displayLine.titleMaxLength then
+						--	rendTxt = utf8Substr(rendTxt, 0, displayLine.titleMaxLength - 3) .. "..."
+						--end
+						rendTxt = displayLine.fillTypeTitle
 					end
 					if rendTxt ~= nil then						
 						setTextVerticalAlignment(RenderText.VERTICAL_ALIGN_BASELINE)
@@ -457,10 +472,10 @@ function SiloDisplays:renderDisplayTexts()
 						setTextAlignment(displayLine.titleAlignment)			
 						renderText3D(transX, transY, transZ, rotX, rotY, rotZ, rendTxtSize, rendTxt)
 					end					
-					if initValues == true then self:updateDisplayLines(true) end	
+					if initValues == true then self:updateDisplayLines(true, nil) end
 				end
 				if self.spec_siloDisplays.initValues ~= nil and self.spec_siloDisplays.initValues == true then
-					self:updateDisplayLines(true)
+					self:updateDisplayLines(true, nil)
 					self.spec_siloDisplays.initValues = false 
 				end	
 			end
@@ -468,10 +483,13 @@ function SiloDisplays:renderDisplayTexts()
 	end
 end
 
-function SiloDisplays:updateDisplayLines(initial)	
+function SiloDisplays:updateDisplayLines(initial, fillTypeIndex)
 	if g_dedicatedServer == nil then
-		for index, displayLine in pairs(self.spec_siloDisplays.siloDisplayLines) do				
-			if displayLine.rootNodeActive == true then					
+		for index, displayLine in pairs(self.spec_siloDisplays.siloDisplayLines) do
+			local check = false
+			if initial ~= nil and initial == false and fillTypeIndex ~= nil and displayLine.fillType ~= nil and displayLine.fillType.index ~= nil and fillTypeIndex == displayLine.fillType.index then check = true end
+			if initial ~= nil and initial == true then check = true end
+			if displayLine.rootNodeActive == true and check == true then
 				local fillLevel = 0
 				local intFill = 0 
 				local floatPartFill = 0
