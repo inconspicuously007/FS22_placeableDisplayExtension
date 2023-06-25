@@ -511,7 +511,7 @@ FeedingRobotDisplays = {}
 
 function FeedingRobotDisplays:updateUnloadingSpot(superFunc, spot)	
 	if self.owner.spec_husbandryDisplays ~= nil then
-		self.owner:updateDisplayLines()
+		self.owner:updateDisplayLines(true, nil)
 	end
 end
 
