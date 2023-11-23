@@ -61,12 +61,15 @@ function HusbandryDisplays.registerXMLPaths(schema, basePath)
 	schema:register(XMLValueType.FLOAT, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#lineTitleTextSize", "Display title text size", 0.05)
 	schema:register(XMLValueType.FLOAT, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#lineFillLevelTextSize", "Display fill level text size", 0.05)
 	schema:register(XMLValueType.INT, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#lineTitleMaxLen", "Display title text max length", 15)
-	schema:register(XMLValueType.STRING, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#fillLevelType", "Display type for fillLevel or capacity")
-	
-	--schema:register(XMLValueType.NODE_INDEX, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#productionOnNode", "Display node for production line active")
-	--schema:register(XMLValueType.NODE_INDEX, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#productionOffNode", "Display node for production line inactive")
+	schema:register(XMLValueType.STRING, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#fillLevelType", "Display type for fillLevel or capacity")		
 	schema:register(XMLValueType.NODE_INDEX, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#fillWarningNode", "Display node for empty storage for filltype")
-	--schema:register(XMLValueType.STRING, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#productionLine", "Display production line id")
+	
+	schema:register(XMLValueType.NODE_INDEX, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#fillLevelNodeVis0", "Filllevel visual node when lower than 1%")
+	schema:register(XMLValueType.NODE_INDEX, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#fillLevelNodeVis25", "Filllevel visual node when lower than 25%")
+	schema:register(XMLValueType.NODE_INDEX, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#fillLevelNodeVis50", "Filllevel visual node when between 25% and 50%")
+	schema:register(XMLValueType.NODE_INDEX, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#fillLevelNodeVis75", "Filllevel visual node when between 50% and 75%")
+	schema:register(XMLValueType.NODE_INDEX, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#fillLevelNodeVis99", "Filllevel visual node when between 75% and 99%")
+	schema:register(XMLValueType.NODE_INDEX, basePath .. ".husbandry.husbandryDisplays.display(?).displayLine(?)#fillLevelNodeVis100", "Filllevel visual node when greater or equal than 99%")
 	
 	schema:setXMLSpecializationType()
 end
@@ -109,12 +112,19 @@ function HusbandryDisplays:onLoad(savegame)
 					local lineTitleNode = xmlFile:getValue(displayLineKey .. "#titleNode", nil, components, i3dMappings)
 					local lineCapacityNode = xmlFile:getValue(displayLineKey .. "#capacityNode", nil, components, i3dMappings)
 					local lineFillLevelNode = xmlFile:getValue(displayLineKey .. "#fillLevelNode", nil, components, i3dMappings)
-					local lineHeadLineNode = xmlFile:getValue(displayLineKey .. "#headLineNode", nil, components, i3dMappings)		
-					
-					--local lineProdOnNode = xmlFile:getValue(displayLineKey .. "#productionOnNode", nil, components, i3dMappings)
-					--local lineProdOffNode = xmlFile:getValue(displayLineKey .. "#productionOffNode", nil, components, i3dMappings)
+					local lineHeadLineNode = xmlFile:getValue(displayLineKey .. "#headLineNode", nil, components, i3dMappings)						
 					local lineProdFillWarnNode = xmlFile:getValue(displayLineKey .. "#fillWarningNode", nil, components, i3dMappings)
-					--local lineProdLineID = xmlFile:getValue(displayLineKey .. "#productionLine")
+					
+					local hasFillLevelNodeVis = false
+					local lineFillLevelNodeVis0 = xmlFile:getValue(displayLineKey .. "#fillLevelNodeVis0", nil, components, i3dMappings)
+					local lineFillLevelNodeVis25 = xmlFile:getValue(displayLineKey .. "#fillLevelNodeVis25", nil, components, i3dMappings)
+					local lineFillLevelNodeVis50 = xmlFile:getValue(displayLineKey .. "#fillLevelNodeVis50", nil, components, i3dMappings)
+					local lineFillLevelNodeVis75 = xmlFile:getValue(displayLineKey .. "#fillLevelNodeVis75", nil, components, i3dMappings)
+					local lineFillLevelNodeVis99 = xmlFile:getValue(displayLineKey .. "#fillLevelNodeVis99", nil, components, i3dMappings)
+					local lineFillLevelNodeVis100 = xmlFile:getValue(displayLineKey .. "#fillLevelNodeVis100", nil, components, i3dMappings)
+					
+					if lineFillLevelNodeVis0 ~= nil or lineFillLevelNodeVis25 ~= nil or lineFillLevelNodeVis50 ~= nil or lineFillLevelNodeVis75 ~= nil or lineFillLevelNodeVis99 ~= nil or lineFillLevelNodeVis100 ~= nil then hasFillLevelNodeVis = true end
+
 					
 					local lineTextSize = xmlFile:getValue(displayLineKey .. "#lineSize") or xmlFile:getValue(displayKey .. "#size", 0.03)
 					local lineTitleTextSize = xmlFile:getValue(displayLineKey .. "#lineTitleTextSize") or lineTextSize
@@ -259,6 +269,14 @@ function HusbandryDisplays:onLoad(savegame)
 					
 					local displayLine = {
 						fillLevelNode = lineFillLevelNode,
+						fillLevelNodeVis0 = lineFillLevelNodeVis0,
+						fillLevelNodeVis25 = lineFillLevelNodeVis25,
+						fillLevelNodeVis50 = lineFillLevelNodeVis50,
+						fillLevelNodeVis75 = lineFillLevelNodeVis75,
+						fillLevelNodeVis99 = lineFillLevelNodeVis99,
+						fillLevelNodeVis100 = lineFillLevelNodeVis100,
+						hasFillLevelNodeVis = hasFillLevelNodeVis,
+                        capacityNode = lineCapacityNode,  
                         capacityNode = lineCapacityNode,                        
                         titleNode = lineTitleNode,
 						headLineNode = lineHeadLineNode,
@@ -454,8 +472,28 @@ function HusbandryDisplays:updateDisplayLines(initial, fillTypeIndex)
 			if initial ~= nil and initial == false and fillTypeIndex ~= nil and displayLine.fillType ~= nil and displayLine.fillType.index ~= nil and fillTypeIndex == displayLine.fillType.index then check = true end
 			if initial ~= nil and initial == true then check = true end
 			if displayLine.rootNodeActive == true and check == true then
-				if displayLine.fillLevelCharacterLine ~= nil then
-					local fillLevel = 0
+				local capacity = 0
+				local freeCapacity = 0
+				local fillLevel = 0
+				local intFill = 0 
+				local floatPartFill = 0
+				local fillLevelValue = 0
+				
+				if displayLine.capacityCharacterLine ~= nil or (displayLine.hasFillLevelNodeVis ~= nil and displayLine.hasFillLevelNodeVis == true) then						
+					if displayLine.fillLevelType ~= nil then  
+						if displayLine.fillLevelType == "feedingRobot" then
+							capacity = self.spec_husbandryFeedingRobot.feedingRobot.fillTypeToUnloadingSpot[displayLine.fillType.index].capacity or 0
+						end
+						if displayLine.fillLevelType == "husbandry" then
+							capacity = self:getHusbandryCapacity(displayLine.fillType.index) or 0
+						end
+						if displayLine.fillLevelType == "husbandryFood" then
+							capacity = self:getFoodCapacity() or 0
+						end	
+					end	
+				end
+				
+				if displayLine.fillLevelCharacterLine ~= nil then					
 					if displayLine.fillLevelType ~= nil then  
 						if displayLine.fillLevelType == "husbandry" and displayLine.fillType ~= nil then
 							fillLevel = self:getHusbandryFillLevel(displayLine.fillType.index, displayLine.farmId) or 0
@@ -472,9 +510,35 @@ function HusbandryDisplays:updateDisplayLines(initial, fillTypeIndex)
 						end
 					end	
 					
-					local intFill, floatPartFill = math.modf(fillLevel)				
-					local fillLevelValue = string.format("%" .. displayLine.mask:len() .. "s", g_i18n:formatNumber(intFill))				
+					intFill, floatPartFill = math.modf(fillLevel)				
+					fillLevelValue = string.format("%" .. displayLine.mask:len() .. "s", g_i18n:formatNumber(intFill))				
 					displayLine.fontMaterial:updateCharacterLine(displayLine.fillLevelCharacterLine, fillLevelValue)				
+					
+					
+					
+					if displayLine.hasFillLevelNodeVis ~= nil and displayLine.hasFillLevelNodeVis == true then
+						freeCapacity = capacity - intFill
+						local fillLevelVisValue = 0
+						if intFill > 0 then
+							fillLevelVisValue = (100 * intFill) / (fillLevel + freeCapacity)							
+						end					
+						
+						if displayLine.fillLevelNodeVis0 ~= nil then setVisibility(displayLine.fillLevelNodeVis0, false) end
+						if displayLine.fillLevelNodeVis25 ~= nil then setVisibility(displayLine.fillLevelNodeVis25, false) end
+						if displayLine.fillLevelNodeVis50 ~= nil then setVisibility(displayLine.fillLevelNodeVis50, false) end
+						if displayLine.fillLevelNodeVis75 ~= nil then setVisibility(displayLine.fillLevelNodeVis75, false) end							
+						if displayLine.fillLevelNodeVis99 ~= nil then setVisibility(displayLine.fillLevelNodeVis99, false) end							
+						if displayLine.fillLevelNodeVis100 ~= nil then setVisibility(displayLine.fillLevelNodeVis100, false) end
+						
+						if displayLine.fillLevelNodeVis0 ~= nil and fillLevelVisValue <= 1 then setVisibility(displayLine.fillLevelNodeVis0, true)
+						elseif displayLine.fillLevelNodeVis100 ~= nil and fillLevelVisValue >= 99 then setVisibility(displayLine.fillLevelNodeVis100, true)
+						elseif displayLine.fillLevelNodeVis25 ~= nil and fillLevelVisValue > 1 and fillLevelVisValue < 25  then setVisibility(displayLine.fillLevelNodeVis25, true)
+						elseif displayLine.fillLevelNodeVis50 ~= nil and fillLevelVisValue >= 25 and fillLevelVisValue < 50  then setVisibility(displayLine.fillLevelNodeVis50, true)
+						elseif displayLine.fillLevelNodeVis75 ~= nil and fillLevelVisValue >= 50 and fillLevelVisValue < 75  then setVisibility(displayLine.fillLevelNodeVis75, true)
+						elseif displayLine.fillLevelNodeVis99 ~= nil and fillLevelVisValue >= 75 and fillLevelVisValue < 99  then setVisibility(displayLine.fillLevelNodeVis99, true)
+						end						
+					end
+					
 					if displayLine.prodfillWarnNode ~= nil then
 						local statWarn = false
 						if intFill < 1 then
@@ -483,19 +547,9 @@ function HusbandryDisplays:updateDisplayLines(initial, fillTypeIndex)
 						setVisibility(displayLine.prodfillWarnNode, statWarn)
 					end
 				end
-				if displayLine.capacityCharacterLine ~= nil and initial ~= nil and initial == true then
-					local capacity = 0
-					if displayLine.fillLevelType ~= nil then  
-						if displayLine.fillLevelType == "feedingRobot" then
-							capacity = self.spec_husbandryFeedingRobot.feedingRobot.fillTypeToUnloadingSpot[displayLine.fillType.index].capacity or 0
-						end
-						if displayLine.fillLevelType == "husbandry" then
-							capacity = self:getHusbandryCapacity(displayLine.fillType.index) or 0
-						end
-						if displayLine.fillLevelType == "husbandryFood" then
-							capacity = self:getFoodCapacity() or 0
-						end	
-					end										
+				
+				--if displayLine.capacityCharacterLine ~= nil and initial ~= nil and initial == true then													
+				if displayLine.capacityCharacterLine ~= nil then
 					local intCap, floatPartCap = math.modf(capacity)				
 					local capacityValue = string.format("%" .. displayLine.mask:len() .. "s", g_i18n:formatNumber(intCap))
 					displayLine.fontMaterial:updateCharacterLine(displayLine.capacityCharacterLine, capacityValue)
