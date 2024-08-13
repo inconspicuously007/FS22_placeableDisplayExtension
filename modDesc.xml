@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="71">
     <author>Sly</author>
-    <version>0.0.0.11</version>
+    <version>0.0.0.12</version>
     <title>
 		<de>Displays für Gebäude</de>
 		<en>displays for placeables</en>
@@ -24,6 +24,7 @@
 		<specialization name="productionPointDisplays" className="ProductionPointDisplays" filename="scripts/ProductionPointDisplays.lua"/>    	
 		<specialization name="manureHeapDisplays" className="ManureHeapDisplays" filename="scripts/ManureHeapDisplays.lua"/> 
 		<specialization name="bunkerSiloDisplays" className="BunkerSiloDisplays" filename="scripts/BunkerSiloDisplays.lua"/>
-		<specialization name="husbandryDisplays" className="HusbandryDisplays" filename="scripts/HusbandryDisplays.lua"/>	
+		<specialization name="husbandryDisplays" className="HusbandryDisplays" filename="scripts/HusbandryDisplays.lua"/>
+		<specialization name="objectStorageDisplays" className="ObjectStorageDisplays" filename="scripts/ObjectStorageDisplays.lua"/>		
     </placeableSpecializations>	
 </modDesc>
