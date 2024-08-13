@@ -18,6 +18,9 @@ local function validateTypes(typeManager)
 			if typeEntry.specializationsByName["husbandry"] ~= nil then
 				typeManager:addSpecialization(typeName, modName .. ".husbandryDisplays")
 			end
+			if typeEntry.specializationsByName["objectStorage"] ~= nil then
+				typeManager:addSpecialization(typeName, modName .. ".objectStorageDisplays")
+			end
 		end
 	end
 end
